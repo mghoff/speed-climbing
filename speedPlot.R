@@ -1,5 +1,7 @@
+# Clear environment
 rm(list=ls())
 
+# Load required libraries
 require(rvest)
 require(dplyr)
 require(stringr)
@@ -45,6 +47,8 @@ cdf <- df %>%
                         as.numeric(substr(time,4,5))*60 +
                         as.numeric(substr(time,7,8))) %>%
     mutate(hours = duration / 3600)
+
+# Check final structure
 str(cdf)
 
 # Fit a simple logistic function to data
@@ -53,6 +57,7 @@ summary(exp.fit)
 timevalues <- seq(min(cdf$year)-5, 2070, .1)
 exp.pred <- exp(predict(exp.fit, list(year=timevalues)))
 
+# Print basic plot with fitted line
 plot(hours~year, data=cdf,
     main = "Nose Speed Records (Since First Single-Day Ascent)",
     xlab = "Year", ylab = "Hours",
