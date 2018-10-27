@@ -5,17 +5,21 @@ require(dplyr)
 require(stringr)
 require(ggplot2)
 
+# Set url location to The Nose site & download file
 url <- 'https://en.wikipedia.org/wiki/The_Nose_(El_Capitan)'
 html_file <- download.file(url, destfile = 'El Cap Wiki.html')
 
+# Read the html file
 wiki <- read_html('El Cap Wiki.html')
 
+# Pull xml table from the wikipedia url
 spd_table <- wiki %>%
     xml_nodes(".wikitable") %>%
     .[2] %>%
     xml_nodes("tr") %>%
     xml_text()
 
+# Parse xml file and split strings into relevant columns
 df <- NULL
 for(i in 1:(length(spd_table)-1)) {
     if (str_detect(spd_table[i+1],"\n\n") == TRUE)
@@ -28,8 +32,8 @@ for(i in 1:(length(spd_table)-1)) {
     df <- rbind(df, data.frame(date, team, t))
 }
 names(df) <- c("date", "team", "t")
-df
 
+# Clean up dataframe for plotting
 cdf <- df %>%
     mutate(year = as.numeric(substr(date, 1, 4))) %>%
     mutate(t2 = gsub("\\s*\\([^\\)]+\\)","", t)) %>%
@@ -43,13 +47,14 @@ cdf <- df %>%
     mutate(hours = duration / 3600)
 str(cdf)
 
+# Fit a simple logistic function to data
 exp.fit <- lm(log(hours) ~ year, data = cdf)
 summary(exp.fit)
-timevalues <- seq(1973, 2068, .1)
+timevalues <- seq(min(cdf$year)-5, 2070, .1)
 exp.pred <- exp(predict(exp.fit, list(year=timevalues)))
 
 plot(hours~year, data=cdf,
     main = "Nose Speed Records (Since First Single-Day Ascent)",
     xlab = "Year", ylab = "Hours",
-    xlim = c(1973, 2068), ylim = c(0, 20))
+    xlim = c(min(cdf$year)-5, 2070), ylim = c(0, 20))
 lines(timevalues, exp.pred, col = "red")
